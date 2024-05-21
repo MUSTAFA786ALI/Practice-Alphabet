@@ -34,13 +34,13 @@ To run this application locally, follow these steps:
 1. **Clone the repository:**
 
     ```bash
-    git clone https://github.com/MUSTAFA786ALI/java-project.git
+    git clone https://github.com/MUSTAFA786ALI/Practice-Alphabet.git
     ```
 
 2. **Navigate to the project directory:**
 
     ```bash
-    cd java-project
+    cd Practice-Alphabet
     ```
 
 3. **Open the `index.html` file in your web browser.**

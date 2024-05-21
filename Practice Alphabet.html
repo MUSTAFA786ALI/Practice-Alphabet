@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Practice Letter A</title>
+    <!-- Styles -->
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+      }
+      #drawn-letters-list img {
+        background-color: black;
+      }
+      #canvas-container {
+        margin-bottom: 100px;
+        padding: 110px;
+        position: relative;
+        width: 100%;
+        max-width: 500px; /* Limit canvas size for better user experience */
+        /* Add rounded corners */
+        box-sizing: border-box; /* Include border width in the width calculation */
+        margin: 0 auto; /* Center the container */
+      }
+
+      #canvas {
+        background-color: black; /* Set background color to black */
+        width: 100%; /* Fill the container width */
+        height: auto; /* Auto-adjust height */
+        border: 10px solid #333333; /* Add red border with 10px width */
+        border-radius: 20px;
+        touch-action: none; /* Prevents scrolling while drawing on touch devices */
+      }
+
+      #color-picker {
+        margin-bottom: 20px;
+      }
+
+      #letter-reference {
+        max-width: 70%;
+        height: 190px;
+        margin-bottom: 20px;
+      }
+
+      /* Media query for phone-friendly styles */
+      @media only screen and (max-width: 788px) {
+        /* Adjustments for smaller screens */
+        #canvas-container {
+          margin-bottom: 100px;
+          padding: 17px;
+          position: relative;
+          width: 95%;
+          max-width: 500px; /* Limit canvas size for better user experience */
+          /* Add rounded corners */
+          box-sizing: border-box; /* Include border width in the width calculation */
+          margin: 0 auto; /* Center the container */
+        }
+        #color-picker {
+          padding: 5px; /* Add padding for better spacing */
+          margin-bottom: 5px; /* Add margin for better separation */
+        }
+        #letter-reference {
+          padding: 5px; /* Add padding for better spacing */
+          margin-bottom: 5px; /* Add margin for better separation */
+        }
+
+        #canvas {
+          border-width: 5px; /* Reduce border width */
+          border-radius: 10px; /* Adjust border radius */
+        }
+      }
+    </style>
+    <!-- Font Awesome for icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+      integrity="sha512-s8A2UsF1cIbF1lKeVxnKRM5vVz/uC1u0r0RLaCfzTxnCxtiZ+qcwI4d+5atkrHUTIU7aUEeBYRRD0CxGifG1tA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+  </head>
+  <body>
+    <!-- Practice Letter Section -->
+    <h1>Practice Letters</h1>
+    <div id="canvas-container">
+      <!-- Reference Image for Letter -->
+      <img id="letter-reference" src="" alt="Letter Reference" />
+      <!-- Canvas for Drawing -->
+      <canvas id="canvas"></canvas>
+    </div>
+    <!-- Color Picker -->
+    <input type="color" id="color-picker" />
+    <!-- Reset Button -->
+    <span id="resetIcon" style="cursor: pointer"
+      ><i class="fas fa-undo"></i> Reset</span
+    >
+
+    <!-- Navigation Buttons -->
+    <div>
+      <button id="prevButton" style="margin-right: 10px">
+        Previous Letter
+      </button>
+      <button id="nextButton">Next Letter</button>
+    </div>
+
+    <!-- Enable/Disable Image Button -->
+    <div>
+      <label for="toggleImage">Enable/Disable Image:</label>
+      <input type="checkbox" id="toggleImage" checked />
+    </div>
+
+    <!-- Phone-friendly Message -->
+    <p style="display: none" id="phone-friendly-msg">
+      For the best experience, use this feature on a larger screen.
+    </p>
+
+    <!-- Section to display drawn letters -->
+    <div id="drawn-letters-section">
+      <h2>Drawn Letters</h2>
+      <ul id="drawn-letters-list"></ul>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      const colorPicker = document.getElementById("color-picker");
+      const resetIcon = document.getElementById("resetIcon");
+      const prevButton = document.getElementById("prevButton");
+      const nextButton = document.getElementById("nextButton");
+      const toggleImageCheckbox = document.getElementById("toggleImage");
+      const phoneFriendlyMsg = document.getElementById("phone-friendly-msg");
+      let isDrawing = false;
+      let history = [];
+      let historyIndex = -1;
+      const letters = [
+        {
+          letter: "A",
+          reference:
+            "https://i.pinimg.com/474x/dc/94/1b/dc941bfaa48913905b35bdb774080617.jpg",
+        },
+        {
+          letter: "B",
+          reference:
+            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR3iKByGbUkf8w0n0Wrq23QFecUBOEJNfau-MyWO7-wEbqqMIwPsQ5MN_1WHO0CtDd8OHw&usqp=CAU",
+        },
+        {
+          letter: "C",
+          reference:
+            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR1qv_2l-ZLVEgairJqXjcMoWhrDlnQbyFSzJ6qNuwMN7322LByDgZAdlngzH87aaPhmoA&usqp=CAU",
+        },
+        {
+          letter: "D",
+          reference:
+            "https://i.pinimg.com/474x/dc/94/1b/dc941bfaa48913905b35bdb774080617.jpg",
+        },
+        {
+          letter: "E",
+          reference:
+            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR3iKByGbUkf8w0n0Wrq23QFecUBOEJNfau-MyWO7-wEbqqMIwPsQ5MN_1WHO0CtDd8OHw&usqp=CAU",
+        },
+        {
+          letter: "F",
+          reference:
+            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR1qv_2l-ZLVEgairJqXjcMoWhrDlnQbyFSzJ6qNuwMN7322LByDgZAdlngzH87aaPhmoA&usqp=CAU",
+        },
+        {
+          letter: "G",
+          reference:
+            "https://i.pinimg.com/474x/dc/94/1b/dc941bfaa48913905b35bdb774080617.jpg",
+        },
+        {
+          letter: "H",
+          reference:
+            "https://i.pinimg.com/474x/dc/94/1b/dc941bfaa48913905b35bdb774080617.jpg",
+        },
+        {
+          letter: "I",
+          reference:
+            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR3iKByGbUkf8w0n0Wrq23QFecUBOEJNfau-MyWO7-wEbqqMIwPsQ5MN_1WHO0CtDd8OHw&usqp=CAU",
+        },
+        {
+          letter: "J",
+          reference:
+            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR1qv_2l-ZLVEgairJqXjcMoWhrDlnQbyFSzJ6qNuwMN7322LByDgZAdlngzH87aaPhmoA&usqp=CAU",
+        },
+        {
+          letter: "K",
+          reference:
+            "https://i.pinimg.com/474x/dc/94/1b/dc941bfaa48913905b35bdb774080617.jpg",
+        },
+        {
+          letter: "L",
+          reference:
+            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR3iKByGbUkf8w0n0Wrq23QFecUBOEJNfau-MyWO7-wEbqqMIwPsQ5MN_1WHO0CtDd8OHw&usqp=CAU",
+        },
+        {
+          letter: "M",
+          reference:
+            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR1qv_2l-ZLVEgairJqXjcMoWhrDlnQbyFSzJ6qNuwMN7322LByDgZAdlngzH87aaPhmoA&usqp=CAU",
+        },
+        {
+          letter: "N",
+          reference:
+            "https://i.pinimg.com/474x/dc/94/1b/dc941bfaa48913905b35bdb774080617.jpg",
+        },
+        {
+          letter: "O",
+          reference:
+            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR3iKByGbUkf8w0n0Wrq23QFecUBOEJNfau-MyWO7-wEbqqMIwPsQ5MN_1WHO0CtDd8OHw&usqp=CAU",
+        },
+        {
+          letter: "P",
+          reference:
+            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR1qv_2l-ZLVEgairJqXjcMoWhrDlnQbyFSzJ6qNuwMN7322LByDgZAdlngzH87aaPhmoA&usqp=CAU",
+        },
+        {
+          letter: "Q",
+          reference:
+            "https://i.pinimg.com/474x/dc/94/1b/dc941bfaa48913905b35bdb774080617.jpg",
+        },
+        {
+          letter: "R",
+          reference:
+            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR3iKByGbUkf8w0n0Wrq23QFecUBOEJNfau-MyWO7-wEbqqMIwPsQ5MN_1WHO0CtDd8OHw&usqp=CAU",
+        },
+        {
+          letter: "S",
+          reference:
+            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR1qv_2l-ZLVEgairJqXjcMoWhrDlnQbyFSzJ6qNuwMN7322LByDgZAdlngzH87aaPhmoA&usqp=CAU",
+        },
+        {
+          letter: "T",
+          reference:
+            "https://i.pinimg.com/474x/dc/94/1b/dc941bfaa48913905b35bdb774080617.jpg",
+        },
+        {
+          letter: "U",
+          reference:
+            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR3iKByGbUkf8w0n0Wrq23QFecUBOEJNfau-MyWO7-wEbqqMIwPsQ5MN_1WHO0CtDd8OHw&usqp=CAU",
+        },
+        {
+          letter: "V",
+          reference:
+            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR1qv_2l-ZLVEgairJqXjcMoWhrDlnQbyFSzJ6qNuwMN7322LByDgZAdlngzH87aaPhmoA&usqp=CAU",
+        },
+        {
+          letter: "W",
+          reference:
+            "https://i.pinimg.com/474x/dc/94/1b/dc941bfaa48913905b35bdb774080617.jpg",
+        },
+        {
+          letter: "X",
+          reference:
+            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR3iKByGbUkf8w0n0Wrq23QFecUBOEJNfau-MyWO7-wEbqqMIwPsQ5MN_1WHO0CtDd8OHw&usqp=CAU",
+        },
+        {
+          letter: "Y",
+          reference:
+            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR1qv_2l-ZLVEgairJqXjcMoWhrDlnQbyFSzJ6qNuwMN7322LByDgZAdlngzH87aaPhmoA&usqp=CAU",
+        },
+        {
+          letter: "Z",
+          reference:
+            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR1qv_2l-ZLVEgairJqXjcMoWhrDlnQbyFSzJ6qNuwMN7322LByDgZAdlngzH87aaPhmoA&usqp=CAU",
+        },
+
+        // Add reference image URL for letter B
+        // Add more letters as needed
+      ];
+      let currentLetterIndex = 0;
+      let drawnLetters = []; //Array to store the drawn letters
+
+      // Load initial letter
+      loadLetter(letters[currentLetterIndex]);
+
+      // Set line width
+      ctx.lineWidth = 7; // You can adjust this value to increase or decrease the line width
+
+      // Set default color to white
+      ctx.strokeStyle = "#FFFFFF";
+
+      // Handle color change
+      colorPicker.addEventListener("change", () => {
+        const selectedColor = colorPicker.value;
+        ctx.strokeStyle = selectedColor;
+      });
+
+      // Start drawing
+      canvas.addEventListener("mousedown", startDrawing);
+      canvas.addEventListener("touchstart", startDrawing);
+
+      // Continue drawing
+      canvas.addEventListener("mousemove", draw);
+      canvas.addEventListener("touchmove", draw);
+
+      // Stop drawing
+      canvas.addEventListener("mouseup", stopDrawing);
+      canvas.addEventListener("touchend", stopDrawing);
+
+      // Clear canvas
+      canvas.addEventListener("mouseleave", stopDrawing);
+
+      // Reset canvas on icon click
+      resetIcon.addEventListener("click", resetCanvas);
+
+      // Navigation to next letter
+      nextButton.addEventListener("click", navigateToNextLetter);
+
+      // Navigation to previous letter
+      prevButton.addEventListener("click", navigateToPrevLetter);
+
+      // Enable/disable image
+      toggleImageCheckbox.addEventListener("change", toggleImage);
+      // Function to start drawing
+      function startDrawing(event) {
+        isDrawing = true;
+        const rect = canvas.getBoundingClientRect(); // Get the canvas's position relative to the viewport
+        const x =
+          event.clientX - rect.left || event.touches[0].clientX - rect.left;
+        const y =
+          event.clientY - rect.top || event.touches[0].clientY - rect.top;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        saveState();
+      }
+
+      // Function to continue drawing
+      function draw(event) {
+        if (isDrawing) {
+          const rect = canvas.getBoundingClientRect(); // Get the canvas's position relative to the viewport
+          const x =
+            event.clientX - rect.left || event.touches[0].clientX - rect.left;
+          const y =
+            event.clientY - rect.top || event.touches[0].clientY - rect.top;
+          ctx.lineTo(x, y);
+          ctx.stroke();
+        }
+      }
+
+      // Function to stop drawing
+      function stopDrawing() {
+        isDrawing = false;
+      }
+
+      // Function to save the current state
+      function saveState() {
+        if (history.length > historyIndex + 1) {
+          history.splice(historyIndex + 1);
+        }
+        history.push(canvas.toDataURL());
+        historyIndex++;
+      }
+
+      // Function to save the drawn letter and display it
+      function saveDrawnLetter() {
+        const letterData = {
+          letter: letters[currentLetterIndex].letter,
+          dataUrl: canvas.toDataURL()
+        };
+        drawnLetters.push(letterData);
+  
+        // Display the drawn letter
+        const letterListItem = document.createElement("li");
+        const letterImage = new Image(); // Create a new Image element
+        letterImage.src = canvas.toDataURL(); // Set the source to canvas data URL
+        letterImage.alt = letterData.letter;
+        letterListItem.appendChild(letterImage);
+        document.getElementById("drawn-letters-list").appendChild(letterListItem);
+      }
+
+
+
+      // Function to undo
+      function undo() {
+        if (historyIndex > 0) {
+          historyIndex--;
+          const img = new Image();
+          img.onload = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0);
+          };
+          img.src = history[historyIndex];
+        }
+      }
+
+      // Function to redo
+      function redo() {
+        if (historyIndex < history.length - 1) {
+          historyIndex++;
+          const img = new Image();
+          img.onload = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0);
+          };
+          img.src = history[historyIndex];
+        }
+      }
+
+      // Function to reset canvas
+      function resetCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        history = [];
+        historyIndex = -1;
+      }
+
+      // Function to load letter
+      function loadLetter(letter) {
+        // Update reference image
+        document.getElementById("letter-reference").src = letter.reference;
+        // Reset canvas
+        resetCanvas();
+      }
+
+      // Function to navigate to next letter
+      function navigateToNextLetter() {
+        // Save the deawn letter before moving to the next one
+        saveDrawnLetter();
+        currentLetterIndex = (currentLetterIndex + 1) % letters.length;
+        loadLetter(letters[currentLetterIndex]);
+      }
+
+      // Function to navigate to previous letter
+      function navigateToPrevLetter() {
+        currentLetterIndex =
+          (currentLetterIndex - 1 + letters.length) % letters.length;
+        loadLetter(letters[currentLetterIndex]);
+      }
+
+      // Function to enable/disable image
+      function toggleImage() {
+        const image = document.getElementById("letter-reference");
+        if (toggleImageCheckbox.checked) {
+          image.style.display = "block";
+        } else {
+          image.style.display = "none";
+        }
+      }
+
+      // Display phone-friendly message if needed
+      if (window.innerWidth <= 310) {
+        phoneFriendlyMsg.style.display = "block";
+      }
+    </script>
+  </body>
+</html>
